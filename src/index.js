@@ -60,8 +60,6 @@ app.post('/todos', checksExistsUserAccount, (request, response) => {
 
   console.log(newTODO.id)
 
-  console.log(JSON.stringify(users))
-
   response.sendStatus(201);
 
 });
@@ -71,7 +69,7 @@ app.put('/todos/:id', checksExistsUserAccount, (request, response) => {
 
   const userIndex = users.findIndex(user => user.username === userExists.username)
 
-  const updatedTODO = userExists.todos.map(todo => {
+  users[userIndex].todos = userExists.todos.map(todo => {
     if(todo.id === request.params.id){
       return {
         ...todo,
@@ -82,16 +80,26 @@ app.put('/todos/:id', checksExistsUserAccount, (request, response) => {
     return todo
   })
 
-  users[userIndex].todos = updatedTODO
-
-  console.log(JSON.stringify(users))
-
   response.sendStatus(200)
 
 });
 
 app.patch('/todos/:id/done', checksExistsUserAccount, (request, response) => {
-  // Complete aqui
+  const userExists = response.locals.user
+
+  const userIndex = users.findIndex(user => user.username === userExists.username)
+
+  users[userIndex].todos = userExists.todos.map(todo => {
+    if(todo.id === request.params.id) {
+      return {
+        ...todo,
+        done: true
+      }
+    }
+    return todo
+  });
+
+  response.sendStatus(200)
 });
 
 app.delete('/todos/:id', checksExistsUserAccount, (request, response) => {
