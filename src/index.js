@@ -11,10 +11,12 @@ app.use(express.json());
 const users = [];
 
 function checksExistsUserAccount(request, response, next) {
-  const user = users.find(user => request.headers.username === user.username);
+  const userExists = users.find(user => request.headers.username === user.username);
+  const userIndex = users.findIndex(user => user.username === userExists.username);
 
-  if(user){
-    response.locals.user = user;
+  if(userExists){
+    response.locals.user = userExists;
+    response.locals.userIndex = userIndex;
     next();
   } else {
     response.sendStatus(404);
@@ -34,14 +36,14 @@ app.post('/users', (request, response) => {
 });
 
 app.get('/todos', checksExistsUserAccount, (request, response) => {
-  // console.log(request.header.username)
-  response.sendStatus(200)
-  // const user = users.find(user = user === request.header.user)
-  // Complete aqui
+  const userTODO = response.locals.user.todos;
+
+  response.json(userTODO);
 });
 
 app.post('/todos', checksExistsUserAccount, (request, response) => {
-  const userExists = response.locals.user
+  const userExists = response.locals.user;
+  const userIndex = response.locals.userIndex;
 
   const newTODO = {
     id: uuidv4(),
@@ -55,19 +57,15 @@ app.post('/todos', checksExistsUserAccount, (request, response) => {
     ...userExists,
     todos: [...userExists.todos, newTODO]
   };
-  const userIndex = users.findIndex(user => user.username === response.locals.user.username);
   users[userIndex] = user;
-
-  console.log(newTODO.id)
 
   response.sendStatus(201);
 
 });
 
 app.put('/todos/:id', checksExistsUserAccount, (request, response) => {
-  const userExists = response.locals.user
-
-  const userIndex = users.findIndex(user => user.username === userExists.username)
+  const userExists = response.locals.user;
+  const userIndex = response.locals.userIndex;
 
   users[userIndex].todos = userExists.todos.map(todo => {
     if(todo.id === request.params.id){
@@ -80,14 +78,13 @@ app.put('/todos/:id', checksExistsUserAccount, (request, response) => {
     return todo
   })
 
-  response.sendStatus(200)
+  response.sendStatus(200);
 
 });
 
 app.patch('/todos/:id/done', checksExistsUserAccount, (request, response) => {
-  const userExists = response.locals.user
-
-  const userIndex = users.findIndex(user => user.username === userExists.username)
+  const userExists = response.locals.user;
+  const userIndex = response.locals.userIndex;
 
   users[userIndex].todos = userExists.todos.map(todo => {
     if(todo.id === request.params.id) {
@@ -99,11 +96,16 @@ app.patch('/todos/:id/done', checksExistsUserAccount, (request, response) => {
     return todo
   });
 
-  response.sendStatus(200)
+  response.sendStatus(200);
 });
 
 app.delete('/todos/:id', checksExistsUserAccount, (request, response) => {
-  // Complete aqui
+  const userExists = response.locals.user;
+  const userIndex = response.locals.userIndex;
+  
+  users[userIndex].todos = userExists.todos.filter(todo => todo.id != request.params.id);
+
+  response.sendStatus(204);
 });
 
 module.exports = app;
